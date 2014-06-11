@@ -9,24 +9,26 @@ shinyUI(pageWithSidebar(
   
   mainPanel(
     mapOutput('map_container'),
-    h2("Data Table"),
+    br(),
+    h4("Data Table"),
     checkboxInput(inputId = "pageable", label = "Paginate?"),
     conditionalPanel("input.pageable==true",
                      numericInput(inputId = "pagesize",
                                   label = "Restaurants per page",5)),
     htmlOutput("myTable"),
+    h4("Relationship Viewer"),
+    selectInput('variablex','Variable X:', c("Likes" = 'likes',"Talking" = 'talking', "Here" = 'here')),
+    selectInput('variabley','Variable Y:', c("Likes" = 'likes',"Talking" = 'talking', "Here" = 'here')),
+    htmlOutput("myChart"),
     width = 8),
   
   sidebarPanel(
     h4("Restaurant Summary"),
+    checkboxInput(inputId = "centeronrestaurant", label = "Center Map on Restaurant?", value = FALSE),
     selectInput('restaurantsummary','Search Restaurant',sort(restaurantdf()$name)),
     htmlOutput("mySummary"),
-    h4("Relationship Viewer"),
-    htmlOutput("myChart"),
-    selectInput('variablex','Variable X:', c("Likes" = 'likes',"Talking" = 'talking', "Here" = 'here')),
-    selectInput('variabley','Variable Y:', c("Likes" = 'likes',"Talking" = 'talking', "Here" = 'here')),
     h2(""),
-    tableOutput('hello'),
+    #tableOutput('hello'),
     width = 4)
     
     

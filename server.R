@@ -5,7 +5,22 @@ require(googleVis)
 shinyServer(function(input, output, session){
   
   output$map_container <- renderMap({
-    plotMap()
+    
+    if (input$centeronrestaurant == FALSE) 
+      {
+        plotMap()
+      }
+  
+    
+    
+    else if (input$centeronrestaurant)      
+      { 
+        df = restaurantdf()
+        latfocus = df[df$name==input$restaurantsummary,5]
+        lngfocus = df[df$name==input$restaurantsummary,6]
+        plotMap(mapcenter = c(latfocus,lngfocus), mapzoom = 13)
+      }
+    
   })
   
   output$hello <- renderTable({
@@ -26,8 +41,8 @@ shinyServer(function(input, output, session){
       df1 = data.frame(xvar=df[,names(df)==input$variablex],yvar=df[,names(df)==input$variabley])
       
       gvisScatterChart(df1,
-                       options=list(gvis.editor="Editor",width=380,height=380,
-                                    title = "Google Chart",backgroundColor="#f1f1f1"))
+                       options=list(gvis.editor="Editor",width=880,height= 600,
+                                    title = "Scatter Plot",backgroundColor="#ffffff"))
       
       
       

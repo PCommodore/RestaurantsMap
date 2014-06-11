@@ -3,7 +3,7 @@ require(RJSONIO); require(rCharts); require(RColorBrewer); require(httr); requir
 options(stringsAsFactors = F)
 
 #getData
-restaurantslist = 'lesamisrestaurant,restaurantmajestic,bibigo.singapore,kisekirestaurant,restaurantcocotte,BacchanaliaSG'
+restaurantslist = 'lesamisrestaurant,bibigo.singapore,kisekirestaurant,restaurantcocotte,BacchanaliaSG'
 
 getData <- function(rlist = restaurantslist){
   require(httr)
@@ -19,8 +19,9 @@ getData <- function(rlist = restaurantslist){
     popup = iconv(whisker::whisker.render(
       '<b>{{name}}</b><br>
       <b>Likes: </b> {{likes}} <br>
-      <b>Talking About:</b> {{talking_about_count}}
-      <p>Were Here: {{were_here_count}}</p>'
+      <b>Talking About: </b> {{talking_about_count}}<br>
+      <b>Were Here </b>: {{were_here_count}}<br>
+      <b>Phone: </b> {{phone}}'
     ), from = 'latin1', to = 'UTF-8')
     latitude = as.numeric(location$latitude)
     longitude = as.numeric(location$longitude)
@@ -32,12 +33,12 @@ getData <- function(rlist = restaurantslist){
 
 #Visualization
 
-plotMap <- function(dataset = restaurantslist, width = 880, height = 550){
+plotMap <- function(dataset = restaurantslist, mapcenter = c(1.373607, 103.804476), mapzoom = 11, width = 880, height = 550){
   data_ <- getData(dataset); 
   L1 <- Leaflet$new()
   #L1$tileLayer(provider = 'Stamen.TonerLite')
   L1$set(width = width, height = height)
-  L1$setView(c(1.373607, 103.804476), 11)
+  L1$setView(mapcenter, mapzoom)
   L1$geoJson(toGeoJSON(data_), 
              onEachFeature = '#! function(feature, layer){
       layer.bindPopup(feature.properties.popup)
@@ -63,10 +64,10 @@ restaurantdf <- function(){
   
   jsonlist = getData();
   
-  numofvariables = 4
+  numofvariables = 6
   data = matrix(0,length(names(jsonlist)), numofvariables)
   data = data.frame(data)
-  names(data) = c("name","likes","talking","here")
+  names(data) = c("name","likes","talking","here", "lat", "lng")
 
 #Convert restaurants to data frame for key variables of interest
 
@@ -75,6 +76,10 @@ restaurantdf <- function(){
     data[i,2] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$likes
     data[i,3] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$talking_about_count
     data[i,4] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$were_here_count
+    data[i,5] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$latitude
+    data[i,6] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$longitude
+    
+      
   }
 
 return(data)
