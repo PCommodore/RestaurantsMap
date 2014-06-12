@@ -4,6 +4,7 @@ require(rCharts)
 require(googleVis)
 shinyServer(function(input, output, session){
   
+    
   output$map_container <- renderMap({
     
     if (input$centeronrestaurant == FALSE) 
@@ -41,7 +42,7 @@ shinyServer(function(input, output, session){
       df1 = data.frame(xvar=df[,names(df)==input$variablex],yvar=df[,names(df)==input$variabley])
       
       gvisScatterChart(df1,
-                       options=list(gvis.editor="Editor",width=880,height= 600,
+                       options=list(gvis.editor="Editor",width=820, height = 800,
                                     title = "Scatter Plot",backgroundColor="#ffffff"))
       
       
@@ -52,7 +53,7 @@ shinyServer(function(input, output, session){
     list(
       page=ifelse(input$pageable==TRUE,'enable','disable'),
       pageSize=input$pagesize,
-      width=880,
+      width=820,
       height=200
     )
   })
@@ -84,6 +85,15 @@ shinyServer(function(input, output, session){
                                 ))
   
   
+  
+})
+
+  autoUpdate <- reactiveTimer(1000, session)
+  
+  output$datetimenow <- renderPrint({
+    autoUpdate()
+    datetime = Sys.time()
+    writeLines(sprintf(as.character(datetime)))
   
 })
   

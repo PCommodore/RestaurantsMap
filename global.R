@@ -33,7 +33,7 @@ getData <- function(rlist = restaurantslist){
 
 #Visualization
 
-plotMap <- function(dataset = restaurantslist, mapcenter = c(1.373607, 103.804476), mapzoom = 11, width = 880, height = 550){
+plotMap <- function(dataset = restaurantslist, mapcenter = c(1.373607, 103.804476), mapzoom = 11, width = 835, height = 550){
   data_ <- getData(dataset); 
   L1 <- Leaflet$new()
   #L1$tileLayer(provider = 'Stamen.TonerLite')
