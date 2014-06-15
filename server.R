@@ -25,12 +25,12 @@ shinyServer(function(input, output, session){
   })
   
   output$hello <- renderTable({
-    restaurantdf()    
+    restaurantdf()[,1:6]    
   })
   
   output$myChart <- renderGvis(
     { 
-      df <- restaurantdf()
+      df <- restaurantdf()[,1:6]
       ###Rcharts Plot Start
       #p1 <- rPlot(input$variablex, input$variabley, data = df, type = 'point')
       #p1$addParams(width = 880, height = 550, dom = 'myChart', title = "Scatter Plot")
@@ -58,7 +58,7 @@ shinyServer(function(input, output, session){
     )
   })
   output$myTable <- renderGvis({
-    gvisTable(restaurantdf(),options=myTableOptions())
+    gvisTable(restaurantdf()[,1:6],options=myTableOptions())
   })
   
   output$mySummary <- renderGvis(
