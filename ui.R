@@ -5,7 +5,8 @@ require(googleVis)
 #networks <- getNetworks()
 shinyUI(pageWithSidebar( 
   #selectInput('network', '', sort(names(networks)), 'citibikenyc'),
-  headerPanel(h4("Restaurant Map Singapore"), windowTitle = "RMap"),
+  headerPanel(h4("Dining Map Singapore - restaurant status in a glance..."), windowTitle = "RMap"),
+
   
   mainPanel(
     tabsetPanel(

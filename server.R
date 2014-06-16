@@ -9,7 +9,7 @@ shinyServer(function(input, output, session){
     
     if (input$centeronrestaurant == FALSE) 
       {
-        plotMap()
+        plotMapList()
       }
   
     
@@ -19,7 +19,7 @@ shinyServer(function(input, output, session){
         df = restaurantdf()
         latfocus = df[df$name==input$restaurantsummary,5]
         lngfocus = df[df$name==input$restaurantsummary,6]
-        plotMap(mapcenter = c(latfocus,lngfocus), mapzoom = 13)
+        plotMapList(mapcenter = c(latfocus,lngfocus), mapzoom = 13)
       }
     
   })

@@ -57,7 +57,7 @@ getData <- function(rlist = restaurantslist){
   #return(L1)
 #}
 
-#####Map Visualization II from Data Frame
+#####Map Visualization II directly from Data Frame
 
 plotMap <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.804476), mapzoom = 11, width = 835, height = 550){
   mapdf = dataset
@@ -68,12 +68,72 @@ plotMap <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.804476
   
   for(i in 1:nrow(mapdf)){
     map$marker(c(mapdf$lat[i],mapdf$lng[i]), 
-               bindPopup = paste("<p>Pick up time:  ", mapdf$name))
-  }
+               bindPopup = paste0("Name: ",mapdf$name[i], "<br>",
+                                 "Status: ",mapdf$status[i], "<br>",
+                                 "Likes: ", mapdf$likes[i], "<br>",
+                                 "Talking About: ", mapdf$talking[i], "<br>", 
+                                 "Were Here: ", mapdf$here[i])) }
+  
   map$enablePopover(TRUE)
   map$fullScreen(TRUE)
   return(map)
 }
+
+
+#####Map Visualization III indirectly from Data Frame
+
+plotMapList <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.804476), mapzoom = 11, width = 835, height = 550){
+  mapdf = dataset  
+  maplist = toJSONArray2(mapdf, json = F)
+  
+  map = Leaflet$new()
+  map$set(width = width, height = height)
+  map$setView(mapcenter, mapzoom)
+  
+  ###Add content for popup
+  
+  maplist = lapply(maplist, function(rest){within(rest, { 
+    #fillColor = cut(
+      #were_here_count, 
+      #breaks = c(0, 100, 500, 1000, 1100, 20000), 
+      #labels = brewer.pal(5, 'RdYlGn'),
+      #include.lowest = TRUE
+    #) 
+    popup = iconv(whisker::whisker.render(
+      '<b>{{name}}</b><br>
+      <b>Likes: </b> {{likes}} <br>
+      <b>Talking About: </b> {{talking}}<br>
+      <b>Were Here </b>: {{here}}<br>
+      <b>Status: </b> {{status}}'
+    ), from = 'latin1', to = 'UTF-8')
+    })
+  })
+  
+  
+  ##End Add content for popup
+  
+  
+  map$geoJson(toGeoJSON(maplist, lat = 'lat', lon = 'lng'),
+             onEachFeature = '#! function(feature, layer){
+    layer.bindPopup(feature.properties.popup)
+ } !#',
+             pointToLayer =  "#! function(feature, latlng){
+    return L.circleMarker(latlng, {
+      radius: 5,
+      fillColor: feature.properties.color || 'blue',    
+      color: '#000',
+      weight: 1,
+      fillOpacity: 0.8
+    })
+ } !#"         
+  )
+  
+  map$enablePopover(TRUE)
+  map$fullScreen(TRUE)
+  return(map)
+}
+
+
   
 
 
@@ -204,8 +264,12 @@ restaurantdf <- function(){
         
       }
       
-      
-      
+    }
+    
+    for (j in 7:34) {
+      if (data[i,j]=="00:00") {
+        data[i,j] = "24:00"
+      }
     }
     
     if (weekdays(time) == "Monday") {
