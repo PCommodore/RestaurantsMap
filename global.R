@@ -2,6 +2,8 @@
 require(RJSONIO); require(rCharts); require(RColorBrewer); require(httr); require(jsonlite);require(googleVis)
 options(stringsAsFactors = F)
 
+#source(file="server.r")
+
 #getData
 restaurantslist = 'lesamisrestaurant,bibigo.singapore,kisekirestaurant,restaurantcocotte,BacchanaliaSG,mamaisonsg'
 
@@ -141,6 +143,7 @@ plotMapList <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.80
 restaurantdf <- function(){
   
   jsonlist = getData();
+  Sys.setenv(TZ='Asia/Kuala_Lumpur');
   time = Sys.time();
   
   numofvariables = 36

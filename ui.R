@@ -39,12 +39,15 @@ shinyUI(pageWithSidebar(
   
     
   sidebarPanel(
-    h4("Time"),
+    h4("Time - SG/KL"),
     h5(strong(textOutput("datetimenow"))),
     h4("Restaurant Summary"),
     checkboxInput(inputId = "centeronrestaurant", label = "Center Map on Restaurant?", value = FALSE),
     selectInput('restaurantsummary','Search Restaurant',sort(restaurantdf()$name)),
-    htmlOutput("mySummary"),
+    tabsetPanel(
+      tabPanel("Stats",htmlOutput("mySummary")),
+      tabPanel("Hours",htmlOutput("myHours"))
+    ),
     h2(""),
     #tableOutput('hello'),
     width = 4)
