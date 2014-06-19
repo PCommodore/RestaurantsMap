@@ -5,7 +5,7 @@ options(stringsAsFactors = F)
 #source(file="server.r")
 
 #getData
-restaurantslist = 'lesamisrestaurant,bibigo.singapore,kisekirestaurant,restaurantcocotte,BacchanaliaSG,mamaisonsg'
+restaurantslist = 'lesamisrestaurant,bibigo.singapore,kisekirestaurant,restaurantcocotte,BacchanaliaSG,mamaisonsg,dbBistroModerneSingapore'
 
 getData <- function(rlist = restaurantslist){
   require(httr)
@@ -102,11 +102,12 @@ plotMapList <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.80
       #include.lowest = TRUE
     #) 
     popup = iconv(whisker::whisker.render(
-      '<b>{{name}}</b><br>
+      '<a href = {{fburl}} target = "blank"><img src= {{picture}} height="100" width="200"></a> <br>
+      <b>{{name}}</b><br>
       <b>Likes: </b> {{likes}} <br>
       <b>Talking About: </b> {{talking}}<br>
       <b>Were Here </b>: {{here}}<br>
-      <b>Status: </b> {{status}}'
+      <b>Status: </b> {{status}}<br>'
     ), from = 'latin1', to = 'UTF-8')
     })
   })
@@ -146,7 +147,7 @@ restaurantdf <- function(){
   Sys.setenv(TZ='Asia/Kuala_Lumpur');
   time = Sys.time();
   
-  numofvariables = 36
+  numofvariables = 39
   data = matrix(0,length(names(jsonlist)), numofvariables)
   data = data.frame(data)
   names(data) = c("name","likes","talking","here", "lat", "lng", 
@@ -157,7 +158,7 @@ restaurantdf <- function(){
                   "fri1open","fri1close", "fri2open", "fri2close", 
                   "sat1open","sat1close", "sat2open", "sat2close", 
                   "sun1open","sun1close", "sun2open", "sun2close",
-                  "status","color")
+                  "status","color","picture","fburl","description")
   
   #Convert restaurants to data frame for key variables of interest
   
@@ -168,6 +169,13 @@ restaurantdf <- function(){
     data[i,4] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$were_here_count
     data[i,5] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$latitude
     data[i,6] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$longitude
+    data[i,37] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$cover$source
+    data[i,38] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$link
+    
+    if ("description" %in% names(eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i]))))) {
+      data[i,39] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$description
+    }
+    else {data[i,39] = "This restaurant did not include a description."}
     
     if ("hours" %in% names(eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i]))))) {
       if ("mon_1_open" %in% names(eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$hours)) {

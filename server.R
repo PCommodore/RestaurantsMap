@@ -94,6 +94,8 @@ shinyServer(function(input, output, session){
     Sys.setenv(TZ='Asia/Kuala_Lumpur')
     datetime = Sys.time()
     writeLines(sprintf(as.character(datetime)))
+    writeLines(sprintf(weekdays(datetime)))
+    
   
 })
 
@@ -246,13 +248,100 @@ output$myHours <- renderGvis({
     )
   )
   
-  
-  
-    
-  
-  
 })
 
+output$myInfo <- renderPrint ({
+  df = restaurantdf()
+  df3 = df[df$name==input$restaurantsummary,]
+  
+  if (! is.na(strptime(df3$mon1open,"%H:%M"))) {
+    writeLines(sprintf("Monday: "))
+    writeLines(sprintf(paste(df3$mon1open,"-",df3$mon1close)))
+    }
+  #else {writeLines(sprintf"NA")}
+  
+  if (! is.na(strptime(df3$mon2open,"%H:%M"))) {
+    writeLines(sprintf(paste("|",df3$mon2open,"-",df3$mon2close)))
+  }
+  
+  if (! is.na(strptime(df3$tue1open,"%H:%M"))) {
+    cat(HTML("<br>"))
+    writeLines(sprintf("Tuesday: "))
+    writeLines(sprintf(paste(df3$tue1open,"-",df3$tue1close)))
+  }
+  #else {writeLines(sprintf"NA")}
+
+  if (! is.na(strptime(df3$tue2open,"%H:%M"))) {
+    writeLines(sprintf(paste("|",df3$tue2open,"-",df3$tue2close)))
+  }
+  
+  
+  if (! is.na(strptime(df3$wed1open,"%H:%M"))) {
+    cat(HTML("<br>"))
+    writeLines(sprintf("Wednesday: "))
+    writeLines(sprintf(paste(df3$wed1open,"-",df3$wed1close)))
+  }
+  #else {writeLines(sprintf"NA")}
+  
+  if (! is.na(strptime(df3$wed2open,"%H:%M"))) {
+    writeLines(sprintf(paste("|",df3$wed2open,"-",df3$wed2close)))
+  }
+  
+  
+  if (! is.na(strptime(df3$thur1open,"%H:%M"))) {
+    cat(HTML("<br>"))
+    writeLines(sprintf("Thursday: "))
+    writeLines(sprintf(paste(df3$thur1open,"-",df3$thur1close)))
+  }
+  #else {writeLines(sprintf"NA")}
+  
+  if (! is.na(strptime(df3$thur2open,"%H:%M"))) {
+    writeLines(sprintf(paste("|",df3$thur2open,"-",df3$thur2close)))
+  }
+  
+  
+  if (! is.na(strptime(df3$fri1open,"%H:%M"))) {
+    cat(HTML("<br>"))
+    writeLines(sprintf("Friday: "))
+    writeLines(sprintf(paste(df3$fri1open,"-",df3$fri1close)))
+  }
+  #else {writeLines(sprintf"NA")}
+  
+  if (! is.na(strptime(df3$fri2open,"%H:%M"))) {
+    writeLines(sprintf(paste("|",df3$fri2open,"-",df3$fri2close)))
+  }
+  
+  
+  if (! is.na(strptime(df3$sat1open,"%H:%M"))) {
+    cat(HTML("<br>"))
+    writeLines(sprintf("Saturday: "))
+    writeLines(sprintf(paste(df3$sat1open,"-",df3$sat1close)))
+  }
+  #else {writeLines(sprintf"NA")}
+  
+  if (! is.na(strptime(df3$sat2open,"%H:%M"))) {
+    writeLines(sprintf(paste("|",df3$sat2open,"-",df3$sat2close)))
+  }
+  
+  
+  if (! is.na(strptime(df3$sun1open,"%H:%M"))) {
+    cat(HTML("<br>"))
+    writeLines(sprintf("Sunday: "))
+    writeLines(sprintf(paste(df3$sun1open,"-",df3$sun1close)))
+  }
+  #else {writeLines(sprintf"NA")}
+  
+  if (! is.na(strptime(df3$sun2open,"%H:%M"))) {
+    writeLines(sprintf(paste("|",df3$sun2open,"-",df3$sun2close)))
+  }
+  
+  cat(HTML("<br><h4>About the Restaurant</h4>"))
+  writeLines(sprintf(df3$description))
+  
+  
+
+  
+})
 
 
   
