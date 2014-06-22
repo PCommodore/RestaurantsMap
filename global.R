@@ -4,7 +4,7 @@ options(stringsAsFactors = F)
 
 #source(file="server.r")
 
-#getData
+###Data Extraction - getData()
 restaurantslist = 'lesamisrestaurant,bibigo.singapore,kisekirestaurant,restaurantcocotte,BacchanaliaSG,mamaisonsg,dbBistroModerneSingapore'
 
 getData <- function(rlist = restaurantslist){
@@ -12,19 +12,6 @@ getData <- function(rlist = restaurantslist){
   url = sprintf('https://graph.facebook.com/?ids=%s', rlist)
   restaurants = fromJSON(url)
   lapply(restaurants, function(rest){within(rest, { 
-    fillColor = cut(
-      were_here_count, 
-      breaks = c(0, 100, 500, 1000, 1100, 20000), 
-      labels = brewer.pal(5, 'RdYlGn'),
-      include.lowest = TRUE
-    ) 
-    popup = iconv(whisker::whisker.render(
-      '<b>{{name}}</b><br>
-      <b>Likes: </b> {{likes}} <br>
-      <b>Talking About: </b> {{talking_about_count}}<br>
-      <b>Were Here </b>: {{were_here_count}}<br>
-      <b>Phone: </b> {{phone}}'
-    ), from = 'latin1', to = 'UTF-8')
     latitude = as.numeric(location$latitude)
     longitude = as.numeric(location$longitude)
     #location$latitude <- location$longitude <- NULL
@@ -33,7 +20,7 @@ getData <- function(rlist = restaurantslist){
   
 }
 
-######Visualization
+###Data Presentation/Visualization - plotMap() and plotMapList()
 
 #plotMap <- function(dataset = restaurantslist, mapcenter = c(1.373607, 103.804476), mapzoom = 11, width = 835, height = 550){
   #data_ <- getData(dataset); 
@@ -59,7 +46,7 @@ getData <- function(rlist = restaurantslist){
   #return(L1)
 #}
 
-#####Map Visualization II directly from Data Frame
+###Map Visualization II directly from Data Frame
 
 plotMap <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.804476), mapzoom = 11, width = 835, height = 550){
   mapdf = dataset
@@ -82,7 +69,7 @@ plotMap <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.804476
 }
 
 
-#####Map Visualization III indirectly from Data Frame
+###Map Visualization III indirectly from Data Frame
 
 plotMapList <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.804476), mapzoom = 11, width = 835, height = 550){
   mapdf = dataset  
@@ -94,7 +81,7 @@ plotMapList <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.80
   
   ###Add content for popup
   
-  maplist = lapply(maplist, function(rest){within(rest, { 
+  maplist = lapply(maplist, function(r){within(r, { 
     #fillColor = cut(
       #were_here_count, 
       #breaks = c(0, 100, 500, 1000, 1100, 20000), 
@@ -113,11 +100,11 @@ plotMapList <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.80
   })
   
   
-  ##End Add content for popup
+  ###End Add content for popup
   
   
   map$geoJson(toGeoJSON(maplist, lat = 'lat', lon = 'lng'),
-             onEachFeature = '#! function(feature, layer){
+            onEachFeature = '#! function(feature, layer){
     layer.bindPopup(feature.properties.popup)
  } !#',
              pointToLayer =  "#! function(feature, latlng){
@@ -137,10 +124,7 @@ plotMapList <- function(dataset = restaurantdf(), mapcenter = c(1.373607, 103.80
 }
 
 
-  
-
-
-
+### Data frame for Exploration and Analysis - restaurantdf()
 restaurantdf <- function(){
   
   jsonlist = getData();
@@ -176,6 +160,10 @@ restaurantdf <- function(){
       data[i,39] = eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$description
     }
     else {data[i,39] = "This restaurant did not include a description."}
+    
+    if (! "hours" %in% names(eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i]))))) {
+      data[i,7:34] = 0.5
+    }   
     
     if ("hours" %in% names(eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i]))))) {
       if ("mon_1_open" %in% names(eval(parse(text=sprintf('jsonlist$%s',names(jsonlist)[i])))$hours)) {
@@ -281,196 +269,506 @@ restaurantdf <- function(){
       if (data[i,j]=="00:00") {
         data[i,j] = "24:00"
       }
+      
     }
     
     if (weekdays(time) == "Monday") {
       
-      if (! is.na(strptime(data[i,7],"%H:%M"))) {	
+      if (! data[i,7] %in% c(0,0.5) & ! data[i,9] %in% c(0,0.5)) {
         
-        if ( time >= strptime(data[i,7],"%H:%M") & time <= strptime(data[i,8],"%H:%M")) {
+        if (time >= strptime(data[i,7],"%H:%M") & time <= strptime(data[i,8],"%H:%M")) {
+          
           data[i,35] = "open"
           data[i,36] = "green" }
         
-        else {data[i,35] = "close"
-              data[i,36] = "red" }
-      }
-      
-      
-      if (! is.na(strptime(data[i,9],"%H:%M"))) {
-        
-        if ( time >= strptime(data[i,9],"%H:%M") & time <= strptime(data[i,10],"%H:%M")) {
+        else if (time >= strptime(data[i,9],"%H:%M") & time <= strptime(data[i,10],"%H:%M")) {
           data[i,35] = "open"
           data[i,36] = "green" }
         
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,9],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,9],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,10],"%H:%M") ) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,10],"%H:%M") ) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
         else {data[i,35] = "close"
               data[i,36] = "red" }
         
       }
       
-      else if (is.na(strptime(data[i,7],"%H:%M")) & is.na(strptime(data[i,9],"%H:%M")))  { 
+      if (data[i,7] == 0) {
         data[i,35] = "close"
-        data[i,36] = "red" 
+        data[i,36] = "red"
       }
+      
+      if (! data[i,7] %in% c(0,0.5) & data[i,9] == 0){
+        if (time >= strptime(data[i,7],"%H:%M") & time <= strptime(data[i,8],"%H:%M")) {
+          
+          data[i,35] = "open"
+          data[i,36] = "green" }
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,7],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,7],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,8],"%H:%M")) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,8],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else {
+          data[i,35] = "close"
+          data[i,36] = "red"
+          
+        }
+        
+      }
+      
       
     }
     
     if (weekdays(time) == "Tuesday") {
       
-      if (! is.na(strptime(data[i,11],"%H:%M"))) {
-        if ( time >= strptime(data[i,11],"%H:%M") & time <= strptime(data[i,12],"%H:%M")) {
+      if (! data[i,11] %in% c(0,0.5) & ! data[i,13] %in% c(0,0.5)) {
+        
+        if (time >= strptime(data[i,11],"%H:%M") & time <= strptime(data[i,12],"%H:%M")) {
+          
           data[i,35] = "open"
           data[i,36] = "green" }
+        
+        else if (time >= strptime(data[i,13],"%H:%M") & time <= strptime(data[i,14],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green" }
+        
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,13],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,13],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,14],"%H:%M") ) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,14],"%H:%M") ) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
         else {data[i,35] = "close"
               data[i,36] = "red" }
         
       }
       
+      if (data[i,11] == 0) {
+        data[i,35] = "close"
+        data[i,36] = "red"
+      }
       
-      if (! is.na(strptime(data[i,13],"%H:%M"))) {
-        if ( time >= strptime(data[i,13],"%H:%M") & time <= strptime(data[i,14],"%H:%M")) {
+      if (! data[i,11] %in% c(0,0.5) & data[i,13] == 0){
+        if (time >= strptime(data[i,11],"%H:%M") & time <= strptime(data[i,12],"%H:%M")) {
+          
           data[i,35] = "open"
           data[i,36] = "green" }
-        else {data[i,35] = "close"
-              data[i,36] = "red" }
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,11],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,11],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,12],"%H:%M")) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,12],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else {
+          data[i,35] = "close"
+          data[i,36] = "red"
+          
+        }
+        
       }
       
-      else if (is.na(strptime(data[i,11],"%H:%M")) & is.na(strptime(data[i,13],"%H:%M")))  { 
-        data[i,35] = "close"
-        data[i,36] = "red" 
-      }
       
     }
     
     if (weekdays(time) == "Wednesday") {
       
-      if (! is.na(strptime(data[i,15],"%H:%M"))) {
-        if ( time >= strptime(data[i,15],"%H:%M") & time <= strptime(data[i,16],"%H:%M")) {
+      if (! data[i,15] %in% c(0,0.5) & ! data[i,17] %in% c(0,0.5)) {
+        
+        if (time >= strptime(data[i,15],"%H:%M") & time <= strptime(data[i,16],"%H:%M")) {
+          
           data[i,35] = "open"
           data[i,36] = "green" }
         
-        else {data[i,35] = "close"
-              data[i,36] = "red" }
-      }
-      
-      if (! is.na(strptime(data[i,17],"%H:%M"))) {
-        if ( time >= strptime(data[i,17],"%H:%M") & time <= strptime(data[i,18],"%H:%M")) {
+        else if (time >= strptime(data[i,17],"%H:%M") & time <= strptime(data[i,18],"%H:%M")) {
           data[i,35] = "open"
           data[i,36] = "green" }
         
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,17],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,17],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,18],"%H:%M") ) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,18],"%H:%M") ) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
         else {data[i,35] = "close"
               data[i,36] = "red" }
+        
       }
       
-      else if (is.na(strptime(data[i,15],"%H:%M")) & is.na(strptime(data[i,17],"%H:%M")))  { 
+      if (data[i,15] == 0) {
         data[i,35] = "close"
-        data[i,36] = "red" 
+        data[i,36] = "red"
       }
+      
+      if (! data[i,15] %in% c(0,0.5) & data[i,17] == 0){
+        if (time >= strptime(data[i,15],"%H:%M") & time <= strptime(data[i,16],"%H:%M")) {
+          
+          data[i,35] = "open"
+          data[i,36] = "green" }
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,15],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,15],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,16],"%H:%M")) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,16],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else {
+          data[i,35] = "close"
+          data[i,36] = "red"
+          
+        }
+        
+      }
+      
+      
     }
     
     if (weekdays(time) == "Thursday") {
       
-      if (! is.na(strptime(data[i,19],"%H:%M"))) {
-        if ( time >= strptime(data[i,19],"%H:%M") & time <= strptime(data[i,20],"%H:%M")) {
+      if (! data[i,19] %in% c(0,0.5) & ! data[i,21] %in% c(0,0.5)) {
+        
+        if (time >= strptime(data[i,19],"%H:%M") & time <= strptime(data[i,20],"%H:%M")) {
+          
           data[i,35] = "open"
           data[i,36] = "green" }
         
-        else {data[i,35] = "close"
-              data[i,36] = "red" }
-      }
-      
-      if (! is.na(strptime(data[i,21],"%H:%M"))) {
-        if ( time >= strptime(data[i,21],"%H:%M") & time <= strptime(data[i,22],"%H:%M")) {
+        else if (time >= strptime(data[i,21],"%H:%M") & time <= strptime(data[i,22],"%H:%M")) {
           data[i,35] = "open"
           data[i,36] = "green" }
         
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,21],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,21],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,22],"%H:%M") ) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,22],"%H:%M") ) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
         else {data[i,35] = "close"
               data[i,36] = "red" }
+        
       }
       
-      else if (is.na(strptime(data[i,19],"%H:%M")) & is.na(strptime(data[i,21],"%H:%M")))  { 
+      if (data[i,19] == 0) {
         data[i,35] = "close"
-        data[i,36] = "red" 
+        data[i,36] = "red"
       }
+      
+      if (! data[i,19] %in% c(0,0.5) & data[i,21] == 0){
+        if (time >= strptime(data[i,19],"%H:%M") & time <= strptime(data[i,20],"%H:%M")) {
+          
+          data[i,35] = "open"
+          data[i,36] = "green" }
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,19],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,19],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,20],"%H:%M")) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,20],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else {
+          data[i,35] = "close"
+          data[i,36] = "red"
+          
+        }
+        
+      }
+      
       
     }
     
     if (weekdays(time) == "Friday") {
       
-      if (! is.na(strptime(data[i,23],"%H:%M"))) {
-        if ( time >= strptime(data[i,23],"%H:%M") & time <= strptime(data[i,24],"%H:%M")) {
+      if (! data[i,23] %in% c(0,0.5) & ! data[i,25] %in% c(0,0.5)) {
+        
+        if (time >= strptime(data[i,23],"%H:%M") & time <= strptime(data[i,24],"%H:%M")) {
+          
           data[i,35] = "open"
           data[i,36] = "green" }
         
-        else {data[i,35] = "close"
-              data[i,36] = "red" }
-      }
-      
-      if (! is.na(strptime(data[i,25],"%H:%M"))) {
-        if ( time >= strptime(data[i,25],"%H:%M") & time <= strptime(data[i,26],"%H:%M")) {
+        else if (time >= strptime(data[i,25],"%H:%M") & time <= strptime(data[i,26],"%H:%M")) {
           data[i,35] = "open"
           data[i,36] = "green" }
         
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,25],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,25],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,26],"%H:%M") ) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,26],"%H:%M") ) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
         else {data[i,35] = "close"
               data[i,36] = "red" }
+        
       }
       
-      else if (is.na(strptime(data[i,23],"%H:%M")) & is.na(strptime(data[i,25],"%H:%M")))  { 
+      if (data[i,23] == 0) {
         data[i,35] = "close"
-        data[i,36] = "red" 
+        data[i,36] = "red"
       }
+      
+      if (! data[i,23] %in% c(0,0.5) & data[i,25] == 0){
+        if (time >= strptime(data[i,23],"%H:%M") & time <= strptime(data[i,24],"%H:%M")) {
+          
+          data[i,35] = "open"
+          data[i,36] = "green" }
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,23],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,23],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,24],"%H:%M")) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,24],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else {
+          data[i,35] = "close"
+          data[i,36] = "red"
+          
+        }
+        
+      }
+      
       
     }
     
     
     if (weekdays(time) == "Saturday") {
       
-      if (! is.na(strptime(data[i,27],"%H:%M"))) {
-        if ( time >= strptime(data[i,27],"%H:%M") & time <= strptime(data[i,28],"%H:%M")) {
+      if (! data[i,27] %in% c(0,0.5) & ! data[i,29] %in% c(0,0.5)) {
+      
+        if (time >= strptime(data[i,27],"%H:%M") & time <= strptime(data[i,28],"%H:%M")) {
+        
           data[i,35] = "open"
           data[i,36] = "green" }
         
-        else {data[i,35] = "close"
-              data[i,36] = "red" }
-      }
-      
-      if (! is.na(strptime(data[i,29],"%H:%M"))) {
-        if ( time >= strptime(data[i,29],"%H:%M") & time <= strptime(data[i,30],"%H:%M")) {
+        else if (time >= strptime(data[i,29],"%H:%M") & time <= strptime(data[i,30],"%H:%M")) {
           data[i,35] = "open"
           data[i,36] = "green" }
         
+              
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,29],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,29],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,30],"%H:%M") ) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,30],"%H:%M") ) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
         else {data[i,35] = "close"
               data[i,36] = "red" }
+        
       }
       
-      else if (is.na(strptime(data[i,27],"%H:%M")) & is.na(strptime(data[i,29],"%H:%M")))  { 
+      if (data[i,27] == 0) {
         data[i,35] = "close"
-        data[i,36] = "red" 
+        data[i,36] = "red"
       }
+      
+      if (! data[i,27] %in% c(0,0.5) & data[i,29] == 0){
+        if (time >= strptime(data[i,27],"%H:%M") & time <= strptime(data[i,28],"%H:%M")) {
+          
+          data[i,35] = "open"
+          data[i,36] = "green" }
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,27],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,27],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,28],"%H:%M")) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,28],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else {
+          data[i,35] = "close"
+          data[i,36] = "red"
+          
+        }
+        
+      }
+      
       
     }
+      
+            
     
     if (weekdays(time) == "Sunday") {
       
-      if (! is.na(strptime(data[i,31],"%H:%M"))) {
+      if (! data[i,31] %in% c(0,0.5) & ! data[i,33] %in% c(0,0.5)) {
+        
         if (time >= strptime(data[i,31],"%H:%M") & time <= strptime(data[i,32],"%H:%M")) {
-          data[i,35] = "open"
-          data[i,36] = "green"}
-        else {data[i,35] = "close"
-              data[i,36] = "red" }	
-      }
-      
-      if (! is.na(strptime(data[i,33],"%H:%M"))) {
-        if (time >= strptime(data[i,33],"%H:%M") & time <= strptime(data[i,34],"%H:%M")) {
+          
           data[i,35] = "open"
           data[i,36] = "green" }
+        
+        else if (time >= strptime(data[i,33],"%H:%M") & time <= strptime(data[i,34],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green" }
+        
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,33],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,33],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,34],"%H:%M") ) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,34],"%H:%M") ) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
         else {data[i,35] = "close"
               data[i,36] = "red" }
+        
       }
       
-      else if (is.na(strptime(data[i,31],"%H:%M")) & is.na(strptime(data[i,33],"%H:%M")))  { 
+      if (data[i,31] == 0) {
         data[i,35] = "close"
-        data[i,36] = "red" 
+        data[i,36] = "red"
       }
+      
+      if (! data[i,31] %in% c(0,0.5) & data[i,33] == 0){
+        if (time >= strptime(data[i,31],"%H:%M") & time <= strptime(data[i,32],"%H:%M")) {
+          
+          data[i,35] = "open"
+          data[i,36] = "green" }
+        
+        else if (time <= strptime("24:00","%H:%M") & time >= strptime(data[i,31],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else if (time <= strptime(data[i,31],"%H:%M") & time >= strptime("00:00","%H:%M") & time <= strptime(data[i,32],"%H:%M")) {
+          data[i,35] = "close"
+          data[i,36] = "red"
+        }
+        
+        else if (time >= strptime("00:00","%H:%M") & time <= strptime(data[i,32],"%H:%M")) {
+          data[i,35] = "open"
+          data[i,36] = "green"
+        }
+        
+        else {
+          data[i,35] = "close"
+          data[i,36] = "red"
+          
+        }
+        
+      }
+      
       
     }
     

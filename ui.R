@@ -2,7 +2,7 @@ require(shiny)
 require(rCharts)
 require(googleVis)
 
-#networks <- getNetworks()
+
 shinyUI(navbarPage("Dining Map SG",
                    tabPanel("Main",sidebarLayout(
                      #headerPanel(h4("Dining Map Singapore - restaurant status in a glance..."), windowTitle = "RMap"),
@@ -46,27 +46,6 @@ shinyUI(navbarPage("Dining Map SG",
                             )
 )
 )
-  #selectInput('network', '', sort(names(networks)), 'citibikenyc'),
-  
-
-  
-  
-    
-    
-    
-    #mapOutput('map_container'),
-    #br(),
-    #h4("Data Table"),
-    #checkboxInput(inputId = "pageable", label = "Paginate?"),
-    #conditionalPanel("input.pageable==true",
-                     #numericInput(inputId = "pagesize",
-                                  #label = "Restaurants per page",5)),
-    #htmlOutput("myTable"),
-    #h4("Relationship Viewer"),
-    #selectInput('variablex','Variable X:', c("Likes" = 'likes',"Talking" = 'talking', "Here" = 'here')),
-    #selectInput('variabley','Variable Y:', c("Likes" = 'likes',"Talking" = 'talking', "Here" = 'here')),
-    #htmlOutput("myChart"),
-    #width = 8),
   
     
     

@@ -1,12 +1,13 @@
-
 require(shiny)
 require(rCharts)
 require(googleVis)
 shinyServer(function(input, output, session){
   
+  autoUpdateMap <- reactiveTimer(900000, session)
     
   output$map_container <- renderMap({
     
+    autoUpdateMap()
     if (input$centeronrestaurant == FALSE) 
       {
         plotMapList()
@@ -54,7 +55,7 @@ shinyServer(function(input, output, session){
       page=ifelse(input$pageable==TRUE,'enable','disable'),
       pageSize=input$pagesize,
       width=820,
-      height=200
+      height=350
     )
   })
   output$myTable <- renderGvis({
@@ -110,12 +111,12 @@ output$myHours <- renderGvis({
   #return(p1) 
   ###Rcharts Plot End
   
-  df2 = df[df$name==input$restaurantsummary,7:34]
+  df2 = df[df$name==input$restaurantsummary,7:35]
                    
   
-  timelinedf=matrix(0,289,1)  
+  timelinedf=matrix(0,433,1)  
   timelinedf=data.frame(timelinedf)
-  timelinedf$time=seq(strptime("0:00","%H:%M"),strptime("24:00","%H:%M"),by = "5 min")
+  timelinedf$time=seq(strptime("0:00","%H:%M"),strptime("24:00","%H:%M") + 12*60*60,by = "5 min")
   
   timelinedf$status = 0
   
@@ -125,13 +126,32 @@ output$myHours <- renderGvis({
     for (i in 1:length(timelinedf$time)) {
       if (! is.na(strptime(df2$mon1open[1],"%H:%M"))) {
         if (timelinedf$time[i] >= strptime(df2$mon1open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$mon1close[1],"%H:%M")) {
-          timelinedf$status[i] = 1
+          timelinedf$status[i] = 1          
+        }
+              
+        else if (strptime(df2$mon1open[1],"%H:%M") >= strptime(df2$mon1close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$mon1open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= strptime(df2$mon1close[1],"%H:%M") + 24 * 60 * 60 ) {
+            timelinedf$status[i] = 1
+          }
           
         }
       }
       if (! is.na(strptime(df2$mon2open[1],"%H:%M"))) {
-        if (timelinedf$time[i] >= strptime(df2$mon2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$mon2close[1],"%H:%M")){
-          timelinedf$status[i] = 1
+        if (timelinedf$time[i] >= strptime(df2$mon2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$mon2close[1],"%H:%M")) {
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$mon2open[1],"%H:%M") >= strptime(df2$mon2close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$mon2open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= strptime(df2$mon2close[1],"%H:%M") + 24 * 60 * 60 ) {
+            timelinedf$status[i] = 1
+          }
+          
         }
       }
     }
@@ -141,13 +161,32 @@ output$myHours <- renderGvis({
     for (i in 1:length(timelinedf$time)) {
       if (! is.na(strptime(df2$tue1open[1],"%H:%M"))) {
         if (timelinedf$time[i] >= strptime(df2$tue1open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$tue1close[1],"%H:%M")) {
-          timelinedf$status[i] = 1
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$tue1open[1],"%H:%M") >= strptime(df2$tue1close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$tue1open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$tue1close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
           
         }
       }
       if (! is.na(strptime(df2$tue2open[1],"%H:%M"))) {
-        if (timelinedf$time[i] >= strptime(df2$tue2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$tue2close[1],"%H:%M")){
-          timelinedf$status[i] = 1
+        if (timelinedf$time[i] >= strptime(df2$tue2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$tue2close[1],"%H:%M")) {
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$tue2open[1],"%H:%M") >= strptime(df2$tue2close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$tue2open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$tue2close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
+          
         }
       }
     }
@@ -157,13 +196,32 @@ output$myHours <- renderGvis({
     for (i in 1:length(timelinedf$time)) {
       if (! is.na(strptime(df2$wed1open[1],"%H:%M"))) {
         if (timelinedf$time[i] >= strptime(df2$wed1open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$wed1close[1],"%H:%M")) {
-          timelinedf$status[i] = 1
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$wed1open[1],"%H:%M") >= strptime(df2$wed1close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$wed1open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$wed1close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
           
         }
       }
       if (! is.na(strptime(df2$wed2open[1],"%H:%M"))) {
-        if (timelinedf$time[i] >= strptime(df2$wed2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$wed2close[1],"%H:%M")){
-          timelinedf$status[i] = 1
+        if (timelinedf$time[i] >= strptime(df2$wed2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$wed2close[1],"%H:%M")) {
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$wed2open[1],"%H:%M") >= strptime(df2$wed2close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$wed2open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$wed2close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
+          
         }
       }
     }
@@ -173,13 +231,32 @@ output$myHours <- renderGvis({
     for (i in 1:length(timelinedf$time)) {
       if (! is.na(strptime(df2$thur1open[1],"%H:%M"))) {
         if (timelinedf$time[i] >= strptime(df2$thur1open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$thur1close[1],"%H:%M")) {
-          timelinedf$status[i] = 1
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$thur1open[1],"%H:%M") >= strptime(df2$thur1close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$thur1open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$thur1close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
           
         }
       }
       if (! is.na(strptime(df2$thur2open[1],"%H:%M"))) {
-        if (timelinedf$time[i] >= strptime(df2$thur2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$thur2close[1],"%H:%M")){
-          timelinedf$status[i] = 1
+        if (timelinedf$time[i] >= strptime(df2$thur2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$thurclose[1],"%H:%M")) {
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$thur2open[1],"%H:%M") >= strptime(df2$thur2close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$thur2open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$thur2close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
+          
         }
       }
     }
@@ -189,13 +266,32 @@ output$myHours <- renderGvis({
     for (i in 1:length(timelinedf$time)) {
       if (! is.na(strptime(df2$fri1open[1],"%H:%M"))) {
         if (timelinedf$time[i] >= strptime(df2$fri1open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$fri1close[1],"%H:%M")) {
-          timelinedf$status[i] = 1
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$fri1open[1],"%H:%M") >= strptime(df2$fri1close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$fri1open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$fri1close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
           
         }
       }
       if (! is.na(strptime(df2$fri2open[1],"%H:%M"))) {
-        if (timelinedf$time[i] >= strptime(df2$fri2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$fri2close[1],"%H:%M")){
-          timelinedf$status[i] = 1
+        if (timelinedf$time[i] >= strptime(df2$fri2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$fri2close[1],"%H:%M")) {
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$fri2open[1],"%H:%M") >= strptime(df2$fri2close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$fri2open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$fri2close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
+          
         }
       }
     }
@@ -205,13 +301,32 @@ output$myHours <- renderGvis({
     for (i in 1:length(timelinedf$time)) {
       if (! is.na(strptime(df2$sat1open[1],"%H:%M"))) {
         if (timelinedf$time[i] >= strptime(df2$sat1open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$sat1close[1],"%H:%M")) {
-          timelinedf$status[i] = 1
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$sat1open[1],"%H:%M") >= strptime(df2$sat1close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$sat1open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$sat1close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
           
         }
       }
       if (! is.na(strptime(df2$sat2open[1],"%H:%M"))) {
-        if (timelinedf$time[i] >= strptime(df2$sat2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$sat2close[1],"%H:%M")){
-          timelinedf$status[i] = 1
+        if (timelinedf$time[i] >= strptime(df2$sat2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$sat2close[1],"%H:%M")) {
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$sat2open[1],"%H:%M") >= strptime(df2$sat2close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$sat2open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$sat2close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
+          
         }
       }
     }
@@ -221,17 +336,42 @@ output$myHours <- renderGvis({
     for (i in 1:length(timelinedf$time)) {
       if (! is.na(strptime(df2$sun1open[1],"%H:%M"))) {
         if (timelinedf$time[i] >= strptime(df2$sun1open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$sun1close[1],"%H:%M")) {
-          timelinedf$status[i] = 1
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$sun1open[1],"%H:%M") >= strptime(df2$sun1close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$sun1open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$sun1close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
           
         }
       }
       if (! is.na(strptime(df2$sun2open[1],"%H:%M"))) {
-        if (timelinedf$time[i] >= strptime(df2$sun2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$sun2close[1],"%H:%M")){
-          timelinedf$status[i] = 1
+        if (timelinedf$time[i] >= strptime(df2$sun2open[1],"%H:%M") & timelinedf$time[i] <= strptime(df2$sun2close[1],"%H:%M")) {
+          timelinedf$status[i] = 1          
+        }
+        
+        else if (strptime(df2$sun2open[1],"%H:%M") >= strptime(df2$sun2close[1],"%H:%M")) {
+          if (timelinedf$time[i] >= strptime(df2$sun2open[1],"%H:%M") & timelinedf$time[i] <= strptime("24:00","%H:%M")) {
+            timelinedf$status[i] = 1
+          }
+          else if (timelinedf$time[i] >= strptime("24:00","%H:%M") & timelinedf$time[i] <= (strptime(df2$sun2close[1],"%H:%M") + 24 * 60 * 60) ) {
+            timelinedf$status[i] = 1
+          }
+          
         }
       }
     }
   }
+  
+  if (df2$status[1] == "unknown") {
+    timelinedf$status = 0.5
+  }
+  
+ 
   
   
   
@@ -241,7 +381,7 @@ output$myHours <- renderGvis({
     xvar = "time",
     yvar = "status",
     options = list(
-      title = paste("Today's Operating Hours for",input$restaurantsummary,"\n", "1 - Open | 0 - Close"),
+      title = paste("Today's Operating Hours for",input$restaurantsummary,"\n", "1 - Open | 0 - Close | 0.5 - Unknown"),
       height = 300,
       width = 350,
       backgroundColor="#f1f1f1"
